@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#0b1020">
+  <title>AirGuard - Personal Air Monitoring</title>
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="bgGlow"></div>
+
+  <div id="setupModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalBackdrop"></div>
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div class="brandDot"></div>
+        <div>
+          <h2>Welcome to AirGuard</h2>
+          <p class="muted">Personalized alerts based on WHO thresholds.</p>
+        </div>
+      </div>
+
+      <form id="userForm" onsubmit="return false;">
+        <div class="formGrid">
+          <div class="inputGroup">
+            <label for="userName">Name</label>
+            <input id="userName" type="text" placeholder="e.g., Alex" required />
+          </div>
+          <div class="inputGroup">
+            <label for="userAge">Age</label>
+            <input id="userAge" type="number" min="1" max="120" placeholder="25" required />
+          </div>
+        </div>
+
+        <div class="groupBox">
+          <p class="labelTitle">Select Risk Group</p>
+          <div class="radioCards">
+            <label class="radioCard">
+              <input type="radio" name="group" value="normal" checked>
+              <div class="radioInfo">
+                <span class="radioTitle">Normal</span>
+                <span class="radioSub">Standard limits</span>
+              </div>
+            </label>
+            <label class="radioCard">
+              <input type="radio" name="group" value="asthma">
+              <div class="radioInfo">
+                <span class="radioTitle">Asthma</span>
+                <span class="radioSub">High sensitivity</span>
+              </div>
+            </label>
+            <label class="radioCard">
+              <input type="radio" name="group" value="child">
+              <div class="radioInfo">
+                <span class="radioTitle">Child</span>
+                <span class="radioSub">High sensitivity</span>
+              </div>
+            </label>
+            <label class="radioCard">
+              <input type="radio" name="group" value="elderly">
+              <div class="radioInfo">
+                <span class="radioTitle">Elderly</span>
+                <span class="radioSub">High sensitivity</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="modalActions">
+          <button id="btnSaveUser" type="submit" class="btnPrimary">
+            <span class="btnText">Start Monitoring</span>
+            <span class="loader hidden"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <img class="logoImg" src="assets/logo.png" alt="AirGuard" />
+      <div class="brandText">
+        <div class="title">AirGuard</div>
+        <div class="subtitle">Live AQ Monitoring</div>
+      </div>
+    </div>
+
+    <div class="userPill" id="userPill" role="button" tabindex="0">
+      <span class="statusDot"></span>
+      <span id="userText">Guest</span>
+      <span class="pillIcon">⚙️</span>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="card hero">
+      <div class="heroLeft">
+        <h1>Air quality for <span class="accent">your health</span>.</h1>
+        <p class="muted">Real-time analysis based on your specific risk profile.</p>
+
+        <div class="heroActions">
+          <button id="btnLiveOnce" class="btnPrimary">
+            <span class="icon">📍</span> Check Location
+          </button>
+          <button id="btnLiveToggle" class="btnGhost">
+            Start Live Mode
+          </button>
+        </div>
+
+        <div class="statusRow">
+          <div id="statusChip" class="chip chipNeutral">Ready</div>
+          <div class="mini" id="placeText">Location not set</div>
+        </div>
+      </div>
+
+      <div class="heroRight">
+        <div class="metricGrid">
+          <div class="metric">
+            <div class="metricLabel">PM2.5</div>
+            <div class="metricValue" id="pm25Val">—</div>
+            <div class="metricSub" id="pm25Sub">µg/m³</div>
+          </div>
+          <div class="metric">
+            <div class="metricLabel">PM10</div>
+            <div class="metricValue" id="pm10Val">—</div>
+            <div class="metricSub" id="pm10Sub">µg/m³</div>
+          </div>
+          <div class="metric">
+            <div class="metricLabel">Ozone</div>
+            <div class="metricValue" id="o3Val">—</div>
+            <div class="metricSub" id="o3Sub">µg/m³</div>
+          </div>
+        </div>
+
+        <div class="recommendBox">
+          <div class="recommendTitle">Health Advice</div>
+          <div id="recommendText" class="recommendText">Run a check to see data.</div>
+          <ul id="reasonsList" class="reasons"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <section class="card">
+        <div class="cardHeader">
+          <h2>Favourites</h2>
+          <button id="btnUseCurrentForFav" class="btnGhost small">Use Current Loc</button>
+        </div>
+
+        <div class="favForm">
+          <div class="searchWrapper">
+            <input id="placeSearch" class="fullWidth" placeholder="Search a place (e.g., Bonn Hbf)" autocomplete="off" />
+            <div id="placeResults" class="searchResults hidden"></div>
+          </div>
+
+          <div class="inputRow">
+            <input id="favLabel" placeholder="Label (e.g. Home)" />
+            <input id="favLat" type="number" step="any" placeholder="Lat" />
+            <input id="favLon" type="number" step="any" placeholder="Lon" />
+          </div>
+
+          <button id="btnAddFav" class="btnPrimary fullWidth">Add Place</button>
+        </div>
+
+        <div id="favList" class="favList"></div>
+      </section>
+
+      <section class="card mapCard">
+        <div class="cardHeader">
+          <h2>Map View</h2>
+          <span class="muted small">Live & Favs</span>
+        </div>
+        <div id="map" class="map"></div>
+      </section>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader">
+        <h2>Recent Checks</h2>
+        <button id="btnClearHistory" class="btnGhost small">Clear</button>
+      </div>
+      <div id="historyList" class="historyList"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="muted small">AirGuard Company by Sicher Limited</span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
