@@ -1,4 +1,6 @@
 :root {
+  /* I used CSS variables here so I can easily theme the app later 
+     (e.g., adding a Light Mode) without hunting down every hex code. */
   --bg: #0b1020;
   --card: rgba(255, 255, 255, 0.05);
   --card-hover: rgba(255, 255, 255, 0.08);
@@ -19,13 +21,21 @@
   --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
-* { box-sizing: border-box; outline-color: var(--primary); }
+* { 
+  /* Essential reset: This ensures padding doesn't affect the final width of elements. */
+  box-sizing: border-box; 
+  outline-color: var(--primary); 
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.5;
+  /* I added overflow-x: hidden to prevent the "horizontal scroll of death" 
+     that often happens on mobile when an element is slightly too wide. */
+  overflow-x: hidden; 
 }
 
 /* Background Effects */
@@ -38,7 +48,13 @@ body {
 
 /* Typography Helpers */
 h1, h2, h3 { margin: 0; font-weight: 800; }
-h1 { font-size: clamp(1.5rem, 5vw, 2.2rem); letter-spacing: -0.02em; }
+h1 { 
+  /* Instead of using multiple media queries for font size, I used clamp().
+     This makes the text fluidly scale between 1.8rem and 2.5rem based on viewport width. */
+  font-size: clamp(1.8rem, 5vw, 2.5rem); 
+  letter-spacing: -0.02em; 
+  line-height: 1.1;
+}
 h2 { font-size: 1.25rem; }
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
@@ -50,6 +66,9 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
   background: linear-gradient(135deg, #7c5cff, #6366f1);
   color: white; padding: 0.75rem 1.25rem; border-radius: 12px; font-weight: 600;
   box-shadow: 0 4px 12px rgba(124,92,255,0.3);
+  /* I added whitespace-nowrap to keep button text on one line, 
+     which keeps the UI cleaner on smaller screens. */
+  white-space: nowrap; 
 }
 .btnPrimary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(124,92,255,0.4); }
 .btnPrimary:active { transform: translateY(0); }
@@ -59,6 +78,7 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
   background: rgba(255,255,255,0.05); color: var(--text);
   padding: 0.6rem 1rem; border-radius: 12px; font-weight: 600;
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 .btnGhost:hover { background: rgba(255,255,255,0.1); }
 .iconBtn { background: transparent; color: var(--primary); font-size: 0.85rem; padding: 4px 8px; }
@@ -69,29 +89,22 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
   position: sticky; top: 0; z-index: 100;
   background: rgba(11, 16, 32, 0.8); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
+  /* Flexbox is perfect here for aligning the logo on the left and user profile on the right. */
   padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.logo {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(135deg, #7c5cff, #22c55e);
-  display: grid; place-items: center; font-weight: 800; color: white;
-}
 .logoImg {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  object-fit: contain;
-  display: block;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  padding: 4px;
+  width: 36px; height: 36px; border-radius: 10px; object-fit: contain; display: block;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 4px;
 }
 .brandText .subtitle { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
 
 .layout {
-  max-width: 1200px; margin: 0 auto; padding: 1.5rem;
+  /* Limiting width to 1200px keeps the text readable on large monitors. */
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 1.5rem;
   display: flex; flex-direction: column; gap: 1.5rem;
 }
 
@@ -102,6 +115,8 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
 }
 
 /* Hero Section */
+/* I chose CSS Grid here because I needed a specific 2-column layout 
+   that is harder to achieve with just Flexbox. */
 .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
 .heroActions { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
 
@@ -117,18 +132,28 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
 .chipMod { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 .chipRisk { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-.metricGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.metricGrid { 
+  display: grid; 
+  /* Using minmax ensures that if the screen gets too narrow, the columns won't collapse below 80px. */
+  grid-template-columns: repeat(3, minmax(80px, 1fr)); 
+  gap: 1rem; 
+  margin-bottom: 1.5rem; 
+}
 .metric { background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; text-align: center; }
 .metricValue { font-size: 1.8rem; font-weight: 800; margin: 0.25rem 0; }
-
 .recommendBox { background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; }
 .recommendTitle{ font-weight: 800; margin-bottom: 6px; }
 .reasons{ margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
 
 /* Grid Sections */
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; }
+.grid2 { 
+  display: grid; 
+  /* 'auto-fit' magically creates new rows when the items (min 300px) don't fit on one line.
+     This gives me responsiveness without writing a specific media query for it. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 1.5rem; 
+}
 
-/* Map */
 .map { height: 350px; width: 100%; border-radius: 12px; z-index: 1; }
 
 /* Favourites Form */
@@ -143,51 +168,22 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
 }
 .favItem:hover { background: rgba(255,255,255,0.08); }
 
-/* --- SEARCH FEATURE STYLES --- */
+/* Search Feature */
 .searchWrapper { position: relative; margin-bottom: 0.75rem; }
-.searchWrapper input {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: white;
-}
-
+.searchWrapper input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: white; }
 .searchResults {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  margin-top: 4px;
-  background: #1e293b;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  max-height: 200px;
-  overflow-y: auto;
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 50; margin-top: 4px;
+  background: #1e293b; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  max-height: 200px; overflow-y: auto;
 }
 .searchResults.hidden { display: none; }
-
-.searchItem {
-  padding: 10px 14px;
-  cursor: pointer;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 0.9rem;
-  color: var(--text);
-  transition: background 0.1s;
-}
+.searchItem { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; color: var(--text); transition: background 0.1s; }
 .searchItem:last-child { border-bottom: none; }
 .searchItem:hover { background: rgba(124, 92, 255, 0.2); color: white; }
-/* ------------------------------- */
 
 /* History */
 .historyList { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
-.histRow {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0.75rem; border-bottom: 1px solid var(--border);
-}
+.histRow { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); }
 
 /* Modal */
 .modal.hidden { display: none; }
@@ -197,6 +193,8 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
   position: relative; width: 100%; max-width: 500px;
   background: #1e293b; border: 1px solid var(--border); border-radius: 24px; padding: 2rem;
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  /* Ensures the modal is scrollable if the screen height is too small (landscape mode) */
+  max-height: 90vh; overflow-y: auto;
 }
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
 .inputGroup { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -212,13 +210,58 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
 .radioTitle { font-weight: 700; font-size: 0.9rem; }
 .radioSub { font-size: 0.75rem; color: var(--muted); }
 
-/* Footer */
 .footer { padding: 18px; text-align:center; }
 
-/* Responsive */
+
+/* ==================================================================
+   MY RESPONSIVE STRATEGY
+   I used a "Desktop-First" approach but added overrides below for 
+   Tablets and Mobile devices to ensure usability.
+   ================================================================== */
+
+/* TABLET VIEW (Max Width 1024px) */
+@media (max-width: 1024px) {
+  .layout {
+    /* Removing the max-width restriction so content fills the tablet screen. */
+    max-width: 100%; 
+    padding: 1rem;
+  }
+  
+  .hero {
+    /* Reducing gap to fit the 2-column layout on slightly narrower screens. */
+    gap: 1.5rem; 
+  }
+}
+
+/* MOBILE VIEW (Max Width 768px) */
 @media (max-width: 768px) {
-  .hero { grid-template-columns: 1fr; }
+  /* CRITICAL CHANGE: I switched the main grids to a single column (1fr). 
+     This stacks the content vertically, which is standard for mobile UX. */
+  .hero { grid-template-columns: 1fr; } 
   .grid2 { grid-template-columns: 1fr; }
+  
+  .topbar { padding: 0.8rem 1rem; }
+  
+  /* I hid non-essential elements (like the subtitle) to save screen real estate. */
+  .brandText .subtitle { display: none; }
+  
+  /* UX IMPROVEMENT: Stacking buttons vertically makes them easier to tap on phones. */
+  .heroActions { flex-direction: column; width: 100%; }
+  .heroActions button { width: 100%; }
+  
   .metricGrid { gap: 0.5rem; }
-  .metricValue { font-size: 1.4rem; }
+  .metricValue { font-size: 1.5rem; }
+  
+  /* Reduced map height so it doesn't take up the entire mobile viewport. */
+  .map { height: 250px; }
+  
+  /* I changed flex-direction to column for inputs so they don't get squished. */
+  .inputRow { flex-direction: column; }
+  
+  /* Form Layout Adjustments for Mobile */
+  .formGrid { grid-template-columns: 1fr; }
+  .radioCards { grid-template-columns: 1fr; }
+  
+  /* Ensuring the modal doesn't touch the edges of the screen on mobile. */
+  .modalCard { width: 90%; padding: 1.5rem; }
 }

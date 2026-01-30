@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  
   <meta name="theme-color" content="#0b1020">
   <title>AirGuard - Personal Air Monitoring</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
+  
   <link rel="stylesheet" href="styles.css" />
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
@@ -18,10 +22,9 @@
     <div class="modalBackdrop"></div>
     <div class="modalCard">
       <div class="modalHeader">
-        <div class="brandDot"></div>
         <div>
           <h2>Welcome to AirGuard</h2>
-          <p class="muted">Personalized alerts based on WHO thresholds.</p>
+          <p class="muted small">Personalized alerts based on WHO thresholds.</p>
         </div>
       </div>
 
@@ -38,43 +41,42 @@
         </div>
 
         <div class="groupBox">
-          <p class="labelTitle">Select Risk Group</p>
+          <p class="labelTitle" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px;">Risk Group</p>
           <div class="radioCards">
             <label class="radioCard">
               <input type="radio" name="group" value="normal" checked>
               <div class="radioInfo">
                 <span class="radioTitle">Normal</span>
-                <span class="radioSub">Standard limits</span>
+                <span class="radioSub">Standard</span>
               </div>
             </label>
             <label class="radioCard">
               <input type="radio" name="group" value="asthma">
               <div class="radioInfo">
                 <span class="radioTitle">Asthma</span>
-                <span class="radioSub">High sensitivity</span>
+                <span class="radioSub">Sensitive</span>
               </div>
             </label>
             <label class="radioCard">
               <input type="radio" name="group" value="child">
               <div class="radioInfo">
                 <span class="radioTitle">Child</span>
-                <span class="radioSub">High sensitivity</span>
+                <span class="radioSub">Sensitive</span>
               </div>
             </label>
             <label class="radioCard">
               <input type="radio" name="group" value="elderly">
               <div class="radioInfo">
                 <span class="radioTitle">Elderly</span>
-                <span class="radioSub">High sensitivity</span>
+                <span class="radioSub">Sensitive</span>
               </div>
             </label>
           </div>
         </div>
 
-        <div class="modalActions">
-          <button id="btnSaveUser" type="submit" class="btnPrimary">
+        <div class="modalActions" style="margin-top: 1.5rem;">
+          <button id="btnSaveUser" type="submit" class="btnPrimary fullWidth">
             <span class="btnText">Start Monitoring</span>
-            <span class="loader hidden"></span>
           </button>
         </div>
       </form>
@@ -160,7 +162,7 @@
           </div>
 
           <div class="inputRow">
-            <input id="favLabel" placeholder="Label (e.g. Home)" />
+            <input id="favLabel" placeholder="Label (Home)" />
             <input id="favLat" type="number" step="any" placeholder="Lat" />
             <input id="favLon" type="number" step="any" placeholder="Lon" />
           </div>
