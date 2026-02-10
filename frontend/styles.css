@@ -1,6 +1,5 @@
 :root {
-  /* I used CSS variables here so I can easily theme the app later 
-     (e.g., adding a Light Mode) without hunting down every hex code. */
+  
   --bg: #0b1020;
   --card: rgba(255, 255, 255, 0.05);
   --card-hover: rgba(255, 255, 255, 0.08);
@@ -211,13 +210,6 @@ button { border: none; font-family: inherit; cursor: pointer; transition: 0.2s; 
 .radioSub { font-size: 0.75rem; color: var(--muted); }
 
 .footer { padding: 18px; text-align:center; }
-
-
-/* ==================================================================
-   MY RESPONSIVE STRATEGY
-   I used a "Desktop-First" approach but added overrides below for 
-   Tablets and Mobile devices to ensure usability.
-   ================================================================== */
 
 /* TABLET VIEW (Max Width 1024px) */
 @media (max-width: 1024px) {

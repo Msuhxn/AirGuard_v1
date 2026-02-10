@@ -18,9 +18,9 @@ function showLoading(btnSel) {
   if (!btn) return;
   btn.disabled = true;
   btn.style.opacity = "0.7";
-  const originalText = btn.textContent;
-  btn.dataset.original = originalText;
-  btn.textContent = "Processing...";
+  // Store original text so we can put it back later
+  if (!btn.dataset.original) btn.dataset.original = btn.innerHTML;
+  btn.innerHTML = '<span class="icon">↻</span> Processing...';
 }
 
 function hideLoading(btnSel) {
@@ -28,7 +28,8 @@ function hideLoading(btnSel) {
   if (!btn) return;
   btn.disabled = false;
   btn.style.opacity = "1";
-  if (btn.dataset.original) btn.textContent = btn.dataset.original;
+  // Restore original text
+  if (btn.dataset.original) btn.innerHTML = btn.dataset.original;
 }
 
 // --- API LAYER ---
@@ -45,7 +46,7 @@ async function apiCall(endpoint, method = "GET", body = null) {
   } catch (err) {
     console.error(err);
     if (!endpoint.includes("/geo/search")) {
-      alert("Connection error. Ensure backend is running.");
+      console.warn("API Connection Issue");
     }
     return null;
   }
@@ -65,17 +66,25 @@ async function initUser() {
 async function handleCreateUser() {
   const name = $("#userName").value.trim();
   const age = Number($("#userAge").value);
-  const group = document.querySelector('input[name="group"]:checked').value;
+  
+  // 1. Get the value directly from your HTML (normal, asthma, child, elderly)
+  const groupEl = document.querySelector('input[name="group"]:checked');
+  const group = groupEl ? groupEl.value : "normal";
 
   if (!name || !age) return alert("Please fill in valid details.");
 
   showLoading("#btnSaveUser");
+  
+  // 2. Send data to backend
   const res = await apiCall("/user", "POST", { name, age, group_type: group });
+  
   hideLoading("#btnSaveUser");
 
   if (res && res.ok) {
     $("#setupModal").classList.add("hidden");
     initUser();
+  } else {
+    alert("Could not save user. Ensure backend is running.");
   }
 }
 
@@ -84,18 +93,25 @@ function updateUserUI() {
   if (!u) return;
   $("#userText").textContent = u.name;
   
-  // Status Dot Logic based on group
+  // 3. Status Dot Logic
   const dot = $(".statusDot");
-  if (u.group_type === 'healthy') dot.style.background = 'var(--success)';
-  else dot.style.background = 'var(--warning)';
+  
+  // Logic: Green for 'normal', Orange/Warning for others
+  if (u.group_type === 'normal') {
+    dot.style.background = 'var(--success)';
+    dot.style.boxShadow = '0 0 8px var(--success)';
+  } else {
+    dot.style.background = 'var(--warning)';
+    dot.style.boxShadow = '0 0 8px var(--warning)';
+  }
 }
 
 // --- MAP & LOCATION ---
 function initMap() {
-  // Center roughly on Germany initially
+  // Center roughly on Central Europe
   STATE.map = L.map("map", { zoomControl: false }).setView([51.16, 10.45], 6);
   
-  // Dark matter tiles for the "Hacker" aesthetic
+  // Dark tiles to match your theme
   L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
     attribution: '&copy; OpenStreetMap & CartoDB',
     subdomains: "abcd",
@@ -111,24 +127,24 @@ function initMap() {
 function updateMapMarkers(lat, lon, label) {
   STATE.markersLayer.clearLayers();
   
-  // Glow effect circle
+  // Outer Glow
   L.circleMarker([lat, lon], {
-    color: '#6366f1',
-    fillColor: '#6366f1',
+    color: '#7c5cff',
+    fillColor: '#7c5cff',
     fillOpacity: 0.2,
     radius: 30,
     weight: 0
   }).addTo(STATE.markersLayer);
 
-  // The actual pin point
+  // Inner Pin
   L.circleMarker([lat, lon], {
     color: '#fff',
-    fillColor: '#6366f1',
+    fillColor: '#7c5cff',
     fillOpacity: 1,
     radius: 6,
     weight: 2
   }).addTo(STATE.markersLayer)
-    .bindPopup(`<b style="color:#000">${label}</b>`)
+    .bindPopup(`<b style="color:#333">${label}</b>`)
     .openPopup();
 
   STATE.map.setView([lat, lon], 13);
@@ -138,9 +154,15 @@ function updateMapMarkers(lat, lon, label) {
 async function checkAirQuality(lat, lon, label = "Current Location") {
   $("#statusChip").className = "chip chipNeutral";
   $("#statusChip").textContent = "Analyzing...";
+  
+  // Update Place Text immediately to show responsiveness
+  $("#placeText").textContent = "Fetching Data...";
 
   const data = await apiCall(`/aq?lat=${lat}&lon=${lon}`);
-  if (!data) return;
+  if (!data) {
+     $("#placeText").textContent = "Connection Failed";
+     return;
+  }
 
   renderHero(data);
   updateMapMarkers(lat, lon, label);
@@ -149,22 +171,24 @@ async function checkAirQuality(lat, lon, label = "Current Location") {
 
 function renderHero(data) {
   const { pollutants, risk } = data;
+  
+  // Fill Metrics
   $("#pm25Val").textContent = pollutants.pm25 ?? "—";
   $("#pm10Val").textContent = pollutants.pm10 ?? "—";
   $("#o3Val").textContent = pollutants.o3 ?? "—";
 
+  // Chip Styling matches your CSS classes
   const colors = { HIGH: "chipRisk", MEDIUM: "chipMod", OK: "chipGood" };
   $("#statusChip").className = `chip ${colors[risk.level] || "chipNeutral"}`;
   $("#statusChip").textContent = risk.label;
 
   $("#placeText").textContent = data.locationName || "Unknown Coordinates";
   
-  // Clean up recommendation text
+  // Recommendation
   const recEl = $("#recommendText");
   recEl.textContent = risk.recommendation;
-  // If high risk, make text red
-  recEl.style.color = risk.level === 'HIGH' ? 'var(--danger)' : 'var(--text)';
-
+  
+  // List Reasons
   const ul = $("#reasonsList");
   ul.innerHTML = "";
   (risk.reasons || []).forEach((r) => {
@@ -187,7 +211,7 @@ async function getLiveLocation() {
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      await checkAirQuality(pos.coords.latitude, pos.coords.longitude, "Live Position");
+      await checkAirQuality(pos.coords.latitude, pos.coords.longitude, "My Location");
       hideLoading("#btnLiveOnce");
     },
     (err) => {
@@ -231,7 +255,8 @@ function handleSearchSelect(e) {
   const lon = item.getAttribute("data-lon");
   const name = item.textContent.trim();
 
-  $("#favLat").value = lat; // No rounding needed for hidden input
+  // Populate hidden fav inputs
+  $("#favLat").value = lat; 
   $("#favLon").value = lon;
   $("#favLabel").value = name.split(",")[0]; 
 
@@ -248,7 +273,7 @@ async function loadFavourites() {
   list.innerHTML = "";
 
   if(favs.length === 0) {
-      list.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:0.8rem">No favorites added yet.</div>';
+      list.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:0.85rem">No favorites added yet.</div>';
       return;
   }
 
@@ -273,6 +298,8 @@ async function addFavourite() {
   await apiCall("/favourites", "POST", { label, lat: Number(lat), lon: Number(lon) });
   
   $("#favLabel").value = ""; 
+  $("#favLat").value = "";
+  $("#favLon").value = "";
   loadFavourites();
 }
 
@@ -283,7 +310,7 @@ async function loadHistory() {
   list.innerHTML = "";
 
   if(hist.length === 0) {
-    list.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:0.8rem">No recent history.</div>';
+    list.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:0.85rem">No recent checks.</div>';
     return;
   }
 
@@ -293,7 +320,7 @@ async function loadHistory() {
     const shortName = (h.location_name || "Unknown").split(',')[0];
     const time = new Date(h.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-    // Determine color based on risk
+    // Determine color based on risk level text
     let riskColor = "var(--muted)";
     if(h.risk_level === "HIGH") riskColor = "var(--danger)";
     if(h.risk_level === "MEDIUM") riskColor = "var(--warning)";
@@ -317,13 +344,15 @@ async function loadHistory() {
 function setupEventListeners() {
   $("#btnSaveUser").onclick = handleCreateUser;
   $("#userPill").onclick = () => $("#setupModal").classList.remove("hidden");
+  
+  // Live Location
   $("#btnLiveOnce").onclick = getLiveLocation;
 
   $("#btnLiveToggle").onclick = () => {
     if (STATE.isLive) {
       clearInterval(STATE.liveTimer);
       STATE.isLive = false;
-      $("#btnLiveToggle").innerHTML = 'Start Live Tracking';
+      $("#btnLiveToggle").textContent = 'Start Live Mode';
       $("#btnLiveToggle").classList.add("btnGhost");
       $("#btnLiveToggle").classList.remove("btnPrimary");
     } else {
@@ -334,14 +363,15 @@ function setupEventListeners() {
              checkAirQuality(pos.coords.latitude, pos.coords.longitude, "Live Tracker");
            });
          }
-      }, 60000);
+      }, 60000); // Update every 1 min
       STATE.isLive = true;
-      $("#btnLiveToggle").innerHTML = 'Stop Tracking';
+      $("#btnLiveToggle").textContent = 'Stop Tracking';
       $("#btnLiveToggle").classList.remove("btnGhost");
-      $("#btnLiveToggle").classList.add("btnPrimary"); // Make it pop when active
+      $("#btnLiveToggle").classList.add("btnPrimary"); 
     }
   };
 
+  // Favorites
   $("#btnAddFav").onclick = addFavourite;
   
   $("#btnUseCurrentForFav").onclick = () => {
@@ -354,24 +384,30 @@ function setupEventListeners() {
      });
   };
 
+  // --- CRITICAL FIX: CLEAR HISTORY ---
   $("#btnClearHistory").onclick = async () => {
-    if (!confirm("Delete all history logs permanently?")) return;
+    if (!confirm("Delete all history?")) return;
+    
     const res = await apiCall("/history/clear", "DELETE");
     if (res && res.ok) {
-        $("#historyList").innerHTML = "";
+        // Force reload from server to confirm deletion
+        await loadHistory();
     } else {
         alert("Failed to clear database.");
     }
   };
 
+  // Search Listeners
   $("#placeSearch").addEventListener("input", handleSearchInput);
   $("#placeResults").addEventListener("click", handleSearchSelect);
   
+  // Close search dropdown on outside click
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".searchWrapper")) $("#placeResults").classList.add("hidden");
   });
 }
 
+// --- BOOTSTRAP ---
 (async function main() {
   initMap();
   setupEventListeners();
